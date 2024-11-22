@@ -1,22 +1,21 @@
 package model
 
 import (
+	"hris-management/utils/model"
+
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
-	Name     string  `json:"name"`
-	Email    string  `json:"email"`
-	Role     string  `json:"role" gorm:"type:enum('admin', 'user', 'manager')"`
-	Password string  `json:"password"`
-	Avatar   *string `json:"avatar"`
-	IsActive bool    `json:"is_active" gorm:"default:true"`
-}
-
-func (u *User) TableName() string {
-	return "users"
+	model.BaseModel
+	Name     string  `json:"name" validate:"required" gorm:"not null"`
+	Email    string  `json:"email" validate:"required,email" gorm:"unique;not null"`
+	Role     string  `json:"role" validate:"required,oneof=admin employee manager" gorm:"not null"`
+	Password string  `json:"-" validate:"required" gorm:"not null"`
+	Avatar   *string `json:"avatar" validate:"omitempty,url" gorm:"default:null"`
+	Position string  `json:"position" validate:"required" gorm:"not null"`
+	IsActive bool    `json:"is_active" validate:"omitempty" gorm:"default:true"`
 }
 
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

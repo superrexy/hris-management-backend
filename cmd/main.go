@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"hris-management/config"
 	"hris-management/internal/user"
-	"hris-management/utils"
+	"hris-management/utils/exception"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -23,7 +23,7 @@ func main() {
 	config.InitDB()
 
 	// Middleware
-	app.Use(utils.CustomErrorHandler)
+	app.Use(exception.CustomErrorHandler)
 	app.Use(recover.New())
 
 	// Routes
@@ -31,7 +31,7 @@ func main() {
 
 	// Not Found
 	app.Use(func(c *fiber.Ctx) error {
-		return utils.NewServiceError(fiber.StatusNotFound, "Not Found", nil)
+		return exception.NewServiceError(fiber.StatusNotFound, "Not Found", nil)
 	})
 
 	address := os.Getenv("APP_ADDRESS")

@@ -38,11 +38,15 @@ func (r *userRepository) GetByAttribute(attribute string, value interface{}) (mo
 }
 
 func (r *userRepository) Create(user *model.User) (model.User, error) {
+	var data model.User
 	result := config.DB.Create(user)
 	if result.Error != nil {
 		return model.User{}, result.Error
 	}
-	return *user, nil
+
+	config.DB.Where("id = ?", user.ID).First(&data)
+
+	return data, nil
 }
 
 func (r *userRepository) Update(user *model.User) (model.User, error) {

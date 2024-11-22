@@ -2,11 +2,13 @@ package config
 
 import (
 	"fmt"
+	userModel "hris-management/internal/user/model"
+	workScheduleModel "hris-management/internal/work_schedule/model"
 	"os"
 
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -30,12 +32,22 @@ func InitDB() {
 	dbname := os.Getenv("DB_NAME")
 	port := os.Getenv("DB_PORT")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai", host, username, password, dbname, port)
+	// MYSQL
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", username, password, host, port, dbname)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		PrepareStmt:                              true,
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		log.Fatal("Error connecting to database\n", err)
 	}
+
+	db.AutoMigrate(&userModel.User{},
+		&workScheduleModel.WorkSchedule{},
+		&workScheduleModel.WorkDay{},
+		&workScheduleModel.UserWorkSchedule{},
+	)
 
 	DB = db
 
