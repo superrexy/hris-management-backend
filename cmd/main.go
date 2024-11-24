@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"hris-management/config"
-	"hris-management/internal/user"
+	userRoute "hris-management/internal/user"
+	workScheduleRoute "hris-management/internal/work_schedule"
 	"hris-management/utils/exception"
 	"os"
 
@@ -27,7 +28,8 @@ func main() {
 	app.Use(recover.New())
 
 	// Routes
-	user.SetupRoutes(app)
+	userRoute.SetupRoutes(app)
+	workScheduleRoute.SetupRoutes(app)
 
 	// Not Found
 	app.Use(func(c *fiber.Ctx) error {

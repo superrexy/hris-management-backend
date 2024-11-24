@@ -66,8 +66,8 @@ func (w *workScheduleRepository) GetWorkScheduleByID(id uint) (model.WorkSchedul
 func (w *workScheduleRepository) UpdateWorkSchedule(workSchedule model.WorkSchedule) (model.WorkSchedule, error) {
 	data := dto.UpdateWorkScheduleRequest{
 		ScheduleName: workSchedule.ScheduleName,
-		StartDate:    *workSchedule.StartDate,
-		EndDate:      *workSchedule.EndDate,
+		StartDate:    workSchedule.StartDate,
+		EndDate:      workSchedule.EndDate,
 		IsActive:     workSchedule.IsActive,
 	}
 

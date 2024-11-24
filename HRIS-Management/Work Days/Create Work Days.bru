@@ -1,0 +1,21 @@
+meta {
+  name: Create Work Day
+  type: http
+  seq: 1
+}
+
+post {
+  url: http://localhost:3000/work-days
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "work_schedule_id": 1,
+    "day_of_week": "MONDAY",
+    "start_time": "09:00",
+    "end_time": "17:00",
+    "is_working_day": true
+  }
+}
