@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	attendanceModel "hris-management/internal/attendance/model"
 	userModel "hris-management/internal/user/model"
 	workScheduleModel "hris-management/internal/work_schedule/model"
 	"os"
@@ -47,6 +48,7 @@ func InitDB() {
 		&workScheduleModel.WorkSchedule{},
 		&workScheduleModel.WorkDay{},
 		&workScheduleModel.UserWorkSchedule{},
+		&attendanceModel.Attendance{},
 	)
 
 	DB = db
