@@ -1,9 +1,12 @@
 package workschedule
 
 import (
+	"fmt"
+	user "hris-management/internal/user"
 	"hris-management/internal/work_schedule/dto"
 	"hris-management/internal/work_schedule/model"
 	"hris-management/utils/exception"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -219,5 +222,188 @@ func NewWorkDayService(workDayRepository WorkDayRepository, workScheduleReposito
 	return &workDayService{
 		workDayRepository:      workDayRepository,
 		workScheduleRepository: workScheduleRepository,
+	}
+}
+
+type UserWorkScheduleService interface {
+	CreateUserWorkSchedule(userWorkSchedule dto.StoreUserWorkScheduleRequest) (model.UserWorkSchedule, error)
+	DeleteUserWorkSchedule(id uint) error
+	GetAllUserWorkSchedule() ([]model.UserWorkSchedule, error)
+	GetUserWorkScheduleByID(id uint) (model.UserWorkSchedule, error)
+	UpdateUserWorkSchedule(userWorkSchedule dto.UpdateUserWorkScheduleRequest, id uint) (model.UserWorkSchedule, error)
+}
+
+type userWorkScheduleService struct {
+	userWorkScheduleRepository UserWorkScheduleRepository
+	workScheduleRepository     WorkScheduleRepository
+	userRepository             user.UserRepository
+}
+
+// CreateUserWorkSchedule implements UserWorkScheduleService.
+func (u *userWorkScheduleService) CreateUserWorkSchedule(userWorkSchedule dto.StoreUserWorkScheduleRequest) (model.UserWorkSchedule, error) {
+	payload := model.UserWorkSchedule{
+		UserID:         userWorkSchedule.UserID,
+		WorkScheduleID: userWorkSchedule.WorkScheduleID,
+	}
+
+	if userWorkSchedule.StartDate != nil && userWorkSchedule.EndDate != nil {
+		startDate, err := time.Parse(time.RFC3339, *userWorkSchedule.StartDate)
+		if err != nil {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Invalid start date", nil)
+		}
+
+		payload.StartDate = &startDate
+
+		endDate, err := time.Parse(time.RFC3339, *userWorkSchedule.EndDate)
+		if err != nil {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Invalid end date", nil)
+		}
+
+		payload.EndDate = &endDate
+	}
+
+	user, _ := u.userRepository.GetByAttribute("id", userWorkSchedule.UserID)
+	if user.ID == 0 {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "User not found", nil)
+	}
+
+	if user.IsActive == false {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "User is not active", nil)
+	}
+
+	if payload.StartDate != nil && payload.EndDate != nil {
+		if payload.StartDate.After(*payload.EndDate) {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "End date must be greater than start date", nil)
+		} else if payload.StartDate.Equal(*payload.EndDate) {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Start date and end date must not be the same", nil)
+		}
+	}
+
+	workSchedule, _ := u.workScheduleRepository.GetWorkScheduleByID(userWorkSchedule.WorkScheduleID)
+	if workSchedule.ID == 0 {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "Work Schedule not found", nil)
+	}
+
+	if workSchedule.IsActive == false {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Work Schedule is not active", nil)
+	}
+
+	userWorkScheduleData, err := u.userWorkScheduleRepository.CreateUserWorkSchedule(payload)
+	if err != nil {
+		return model.UserWorkSchedule{}, err
+	}
+
+	return userWorkScheduleData, nil
+}
+
+// DeleteUserWorkSchedule implements UserWorkScheduleService.
+func (u *userWorkScheduleService) DeleteUserWorkSchedule(id uint) error {
+	userWorkScheduleData, err := u.GetUserWorkScheduleByID(id)
+	if err != nil {
+		return err
+	}
+
+	err = u.userWorkScheduleRepository.DeleteUserWorkSchedule(userWorkScheduleData.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetAllUserWorkSchedule implements UserWorkScheduleService.
+func (u *userWorkScheduleService) GetAllUserWorkSchedule() ([]model.UserWorkSchedule, error) {
+	userWorkScheduleData, err := u.userWorkScheduleRepository.GetAllUserWorkSchedule()
+	if err != nil {
+		return nil, err
+	}
+
+	return userWorkScheduleData, nil
+}
+
+// GetUserWorkScheduleByID implements UserWorkScheduleService.
+func (u *userWorkScheduleService) GetUserWorkScheduleByID(id uint) (model.UserWorkSchedule, error) {
+	userWorkScheduleData, _ := u.userWorkScheduleRepository.GetUserWorkScheduleByID(id)
+
+	if userWorkScheduleData.ID == 0 {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "User Work Schedule not found", nil)
+	}
+
+	return userWorkScheduleData, nil
+}
+
+// UpdateUserWorkSchedule implements UserWorkScheduleService.
+func (u *userWorkScheduleService) UpdateUserWorkSchedule(userWorkSchedule dto.UpdateUserWorkScheduleRequest, id uint) (model.UserWorkSchedule, error) {
+
+	userWorkScheduleData, _ := u.GetUserWorkScheduleByID(id)
+	if userWorkScheduleData.ID == 0 {
+		return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "User Work Schedule not found", nil)
+	}
+
+	if userWorkSchedule.WorkScheduleID != userWorkScheduleData.WorkScheduleID {
+		workSchedule, _ := u.workScheduleRepository.GetWorkScheduleByID(userWorkSchedule.WorkScheduleID)
+		if workSchedule.ID == 0 {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "Work Schedule not found", nil)
+		}
+
+		if workSchedule.IsActive == false {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Work Schedule is not active", nil)
+		}
+
+		userWorkScheduleData.WorkScheduleID = userWorkSchedule.WorkScheduleID
+	}
+
+	if userWorkSchedule.UserID != userWorkScheduleData.UserID {
+		user, _ := u.userRepository.GetByAttribute("id", userWorkSchedule.UserID)
+		if user.ID == 0 {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusNotFound, "User not found", nil)
+		}
+
+		if user.IsActive == false {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "User is not active", nil)
+		}
+
+		userWorkScheduleData.UserID = userWorkSchedule.UserID
+	}
+
+	if userWorkSchedule.StartDate != nil && userWorkSchedule.EndDate != nil {
+		startDate, err := time.Parse(time.RFC3339, *userWorkSchedule.StartDate)
+		if err != nil {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Invalid start date", nil)
+		}
+
+		userWorkScheduleData.StartDate = &startDate
+
+		endDate, err := time.Parse(time.RFC3339, *userWorkSchedule.EndDate)
+		if err != nil {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Invalid end date", nil)
+		}
+
+		userWorkScheduleData.EndDate = &endDate
+	}
+
+	if userWorkSchedule.StartDate != nil && userWorkSchedule.EndDate != nil {
+		if userWorkScheduleData.StartDate.After(*userWorkScheduleData.EndDate) {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "End date must be greater than start date", nil)
+		} else if userWorkScheduleData.StartDate.Equal(*userWorkScheduleData.EndDate) {
+			return model.UserWorkSchedule{}, exception.NewServiceError(fiber.StatusBadRequest, "Start date and end date must not be the same", nil)
+		}
+	}
+
+	fmt.Println(userWorkScheduleData)
+
+	result, err := u.userWorkScheduleRepository.UpdateUserWorkSchedule(userWorkScheduleData)
+	if err != nil {
+		return model.UserWorkSchedule{}, err
+	}
+
+	return result, nil
+}
+
+func NewUserWorkScheduleService(userWorkScheduleRepository UserWorkScheduleRepository, workScheduleRepository WorkScheduleRepository, userRepository user.UserRepository) UserWorkScheduleService {
+	return &userWorkScheduleService{
+		userWorkScheduleRepository: userWorkScheduleRepository,
+		workScheduleRepository:     workScheduleRepository,
+		userRepository:             userRepository,
 	}
 }

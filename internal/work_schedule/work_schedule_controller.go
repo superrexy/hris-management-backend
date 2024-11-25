@@ -212,3 +212,106 @@ func (c *WorkDayController) UpdateWorkDay(ctx *fiber.Ctx) error {
 		Data:       updatedWorkDay,
 	})
 }
+
+type UserWorkScheduleController struct {
+	userWorkScheduleService UserWorkScheduleService
+}
+
+func NewUserWorkScheduleController(userWorkScheduleService UserWorkScheduleService) *UserWorkScheduleController {
+	return &UserWorkScheduleController{
+		userWorkScheduleService,
+	}
+}
+
+func (c *UserWorkScheduleController) CreateUserWorkSchedule(ctx *fiber.Ctx) error {
+	var payload dto.StoreUserWorkScheduleRequest
+	if err := ctx.BodyParser(&payload); err != nil {
+		return err
+	}
+
+	if validated := utils.PayloadValidation(payload); validated != nil {
+		return utils.ErrorResponse(ctx, utils.ErrorResponseParams{
+			StatusCode: fiber.StatusBadRequest,
+			Message:    "Invalid payload",
+			Detail:     validated,
+		})
+	}
+
+	createdUserWorkSchedule, err := c.userWorkScheduleService.CreateUserWorkSchedule(payload)
+	if err != nil {
+		return err
+	}
+
+	return utils.SuccessResponse(ctx, utils.SuccessResponseParams{
+		Message:    "User Work Schedule created successfully",
+		StatusCode: fiber.StatusCreated,
+		Data:       createdUserWorkSchedule,
+	})
+}
+
+func (c *UserWorkScheduleController) DeleteUserWorkSchedule(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	err := c.userWorkScheduleService.DeleteUserWorkSchedule(utils.StringToUint(id))
+	if err != nil {
+		return err
+	}
+
+	return utils.SuccessResponse(ctx, utils.SuccessResponseParams{
+		Message:    "User Work Schedule deleted successfully",
+		StatusCode: fiber.StatusOK,
+	})
+}
+
+func (c *UserWorkScheduleController) GetAllUserWorkSchedule(ctx *fiber.Ctx) error {
+	userWorkSchedules, err := c.userWorkScheduleService.GetAllUserWorkSchedule()
+	if err != nil {
+		return err
+	}
+
+	return utils.SuccessResponse(ctx, utils.SuccessResponseParams{
+		Message:    "User Work Schedules fetched successfully",
+		StatusCode: fiber.StatusOK,
+		Data:       userWorkSchedules,
+	})
+}
+
+func (c *UserWorkScheduleController) GetUserWorkScheduleByID(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	userWorkSchedule, err := c.userWorkScheduleService.GetUserWorkScheduleByID(utils.StringToUint(id))
+	if err != nil {
+		return err
+	}
+
+	return utils.SuccessResponse(ctx, utils.SuccessResponseParams{
+		Message:    "User Work Schedule fetched successfully",
+		StatusCode: fiber.StatusOK,
+		Data:       userWorkSchedule,
+	})
+}
+
+func (c *UserWorkScheduleController) UpdateUserWorkSchedule(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+	var payload dto.UpdateUserWorkScheduleRequest
+	if err := ctx.BodyParser(&payload); err != nil {
+		return err
+	}
+
+	if validated := utils.PayloadValidation(payload); validated != nil {
+		return utils.ErrorResponse(ctx, utils.ErrorResponseParams{
+			StatusCode: fiber.StatusBadRequest,
+			Message:    "Invalid payload",
+			Detail:     validated,
+		})
+	}
+
+	updatedUserWorkSchedule, err := c.userWorkScheduleService.UpdateUserWorkSchedule(payload, utils.StringToUint(id))
+	if err != nil {
+		return err
+	}
+
+	return utils.SuccessResponse(ctx, utils.SuccessResponseParams{
+		Message:    "User Work Schedule updated successfully",
+		StatusCode: fiber.StatusOK,
+		Data:       updatedUserWorkSchedule,
+	})
+}

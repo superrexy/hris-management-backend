@@ -1,6 +1,10 @@
 package workschedule
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"hris-management/internal/user"
+
+	"github.com/gofiber/fiber/v2"
+)
 
 func SetupRoutes(app *fiber.App) {
 	// DI
@@ -11,6 +15,11 @@ func SetupRoutes(app *fiber.App) {
 	workDayRepository := NewWorkDayRepository()
 	workDayService := NewWorkDayService(workDayRepository, workScheduleRepository)
 	workDayController := NewWorkDayController(workDayService)
+
+	userWorkScheduleRepository := NewUserWorkScheduleRepository()
+	userRepository := user.NewUserRepository()
+	userWorkScheduleService := NewUserWorkScheduleService(userWorkScheduleRepository, workScheduleRepository, userRepository)
+	userWorkScheduleController := NewUserWorkScheduleController(userWorkScheduleService)
 
 	// Routes
 	workScheduleGroup := app.Group("/work-schedules")
@@ -26,4 +35,11 @@ func SetupRoutes(app *fiber.App) {
 	workDayGroup.Post("/", workDayController.CreateWorkDay)
 	workDayGroup.Put("/:id", workDayController.UpdateWorkDay)
 	workDayGroup.Delete("/:id", workDayController.DeleteWorkDay)
+
+	userWorkScheduleGroup := app.Group("/user-work-schedules")
+	userWorkScheduleGroup.Get("/", userWorkScheduleController.GetAllUserWorkSchedule)
+	userWorkScheduleGroup.Get("/:id", userWorkScheduleController.GetUserWorkScheduleByID)
+	userWorkScheduleGroup.Post("/", userWorkScheduleController.CreateUserWorkSchedule)
+	userWorkScheduleGroup.Put("/:id", userWorkScheduleController.UpdateUserWorkSchedule)
+	userWorkScheduleGroup.Delete("/:id", userWorkScheduleController.DeleteUserWorkSchedule)
 }

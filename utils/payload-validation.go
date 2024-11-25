@@ -20,6 +20,7 @@ type errorValidation struct {
 
 func PayloadValidation(s interface{}) (errors []errorValidation) {
 	validation.RegisterValidation("timeformat", customValidation.TimeFormatValidation)
+	validation.RegisterValidation("datetime", customValidation.ISO8601DateTimeValidation)
 	if err := validation.Struct(s); err != nil {
 
 		errors := make([]errorValidation, 0)

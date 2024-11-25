@@ -1,0 +1,20 @@
+meta {
+  name: Update User Work Schedule
+  type: http
+  seq: 2
+}
+
+put {
+  url: http://localhost:3000/user-work-schedules/1
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "userId": "123e4567-e89b-12d3-a456-426614174000",
+    "workScheduleId": "123e4567-e89b-12d3-a456-426614174001",
+    "startDate": "2023-10-01",
+    "endDate": "2023-12-31"
+  }
+}

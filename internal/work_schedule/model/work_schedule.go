@@ -17,17 +17,17 @@ type WorkSchedule struct {
 
 type WorkDay struct {
 	model.BaseModel
-	WorkScheduleID uint   `gorm:"not null"`
-	DayOfWeek      string `gorm:"not null;comment:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY"`
-	StartTime      string `gorm:"not null"`
-	EndTime        string `gorm:"not null"`
-	IsWorkingDay   bool   `gorm:"default:true"`
+	WorkScheduleID uint   `gorm:"not null" json:"work_schedule_id"`
+	DayOfWeek      string `gorm:"not null;comment:MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY,SUNDAY" json:"day_of_week"`
+	StartTime      string `gorm:"not null" json:"start_time"`
+	EndTime        string `gorm:"not null" json:"end_time"`
+	IsWorkingDay   bool   `gorm:"default:true" json:"is_working_day"`
 }
 
 type UserWorkSchedule struct {
 	model.BaseModel
-	UserID         uint
-	WorkScheduleID uint
-	StartDate      *time.Time `gorm:"null"`
-	EndDate        *time.Time `gorm:"null"`
+	UserID         uint       `gorm:"not null" json:"user_id"`
+	WorkScheduleID uint       `gorm:"not null" json:"work_schedule_id"`
+	StartDate      *time.Time `gorm:"null" json:"start_date"`
+	EndDate        *time.Time `gorm:"null" json:"end_date"`
 }

@@ -217,14 +217,7 @@ func (u *userWorkScheduleRepository) GetUserWorkScheduleByID(id uint) (model.Use
 
 // UpdateUserWorkSchedule implements UserWorkScheduleRepository.
 func (u *userWorkScheduleRepository) UpdateUserWorkSchedule(userWorkSchedule model.UserWorkSchedule) (model.UserWorkSchedule, error) {
-	data := dto.UpdateUserWorkScheduleRequest{
-		UserID:         userWorkSchedule.UserID,
-		WorkScheduleID: userWorkSchedule.WorkScheduleID,
-		StartDate:      *userWorkSchedule.StartDate,
-		EndDate:        *userWorkSchedule.EndDate,
-	}
-
-	result := config.DB.Model(&userWorkSchedule).Updates(data)
+	result := config.DB.Model(&userWorkSchedule).Updates(&userWorkSchedule)
 	if result.Error != nil {
 		return model.UserWorkSchedule{}, result.Error
 	}
